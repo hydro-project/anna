@@ -41,7 +41,6 @@ message KeyAccessData {
     // The number of times this key was accessed during this epoch.
     uint32 access_count = 2;
   }
-
   // A list of all the key access frequencies tracked during this epoch.
   repeated KeyCount keys = 1;
 }
