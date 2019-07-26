@@ -1,0 +1,46 @@
+//  Copyright 2019 U.C. Berkeley RISE Lab
+// 
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+// 
+//      http://www.apache.org/licenses/LICENSE-2.0
+// 
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+syntax = "proto3";
+
+// Client-generated feedback used for system monitoring and planning.
+message UserFeedback {
+  // Observed latency measurements for individual keys.
+  message KeyLatency {
+    // The key for which latency is being reported.
+    string key = 1;
+
+    // The observed latency for this key.
+    double latency = 2;
+  }
+  
+  // A unique ID representing each individual client.
+  string uid = 1;
+
+  // Perceived latency across all requests made by this client.
+  double latency = 2;
+
+  // Notifies the monitoring system that the running benchmark has finished.
+  bool finish = 3;
+
+  // The perceived throughput across all keys.
+  double throughput = 4;
+
+  // Set during the benchmark warm-up phase to tell the monitoring system that
+  // it should ignore policy decisions.
+  bool warmup = 5;
+
+  // Perceived latencies for individual keys.
+  repeated KeyLatency key_latency = 6;
+}
