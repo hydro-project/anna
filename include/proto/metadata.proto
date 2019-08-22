@@ -1,11 +1,11 @@
 //  Copyright 2019 U.C. Berkeley RISE Lab
-// 
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,7 +41,7 @@ message KeyAccessData {
     // The number of times this key was accessed during this epoch.
     uint32 access_count = 2;
   }
-  
+
   // A list of all the key access frequencies tracked during this epoch.
   repeated KeyCount keys = 1;
 }
@@ -71,11 +71,11 @@ message ClusterMembership {
     message Server {
       // The public IP address for a server.
       string public_ip = 1;
-      
+
       // The private IP address for a server.
       string private_ip = 2;
     }
- 
+
     // The Tier represented by this message -- either MEMORY or DISK.
     Tier tier_id = 1;
 
@@ -93,15 +93,15 @@ message KeySizeData {
   message KeySize {
     // The key for which size metadata is being reported.
     string key = 1;
-    
+
     // The size of the above key.
     uint32 size = 2;
   }
-  
+
   // The list of key size metadata tuples being reported.
   repeated KeySize key_sizes = 1;
 }
-  
+
 // A message that captures the replication factor for an individual key.
 message ReplicationFactor {
   // A message representing the replication level for a single key at a

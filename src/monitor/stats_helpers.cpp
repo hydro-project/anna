@@ -66,7 +66,8 @@ void collect_internal_stats(
           string metadata_type = tokens[1];
           Address ip_pair = tokens[2] + "/" + tokens[3];
           unsigned tid = stoi(tokens[4]);
-          unsigned tier_id = stoi(tokens[5]);
+          Tier tier;
+          Tier_Parse(tokens[5], &tier);
 
           LWWValue lww_value;
           lww_value.ParseFromString(tuple.payload());
@@ -76,7 +77,7 @@ void collect_internal_stats(
             ServerThreadStatistics stat;
             stat.ParseFromString(lww_value.value());
 
-            if (tier_id == 1) {
+            if (tier == MEMORY) {
               memory_storage[ip_pair][tid] = stat.storage_consumption();
               memory_occupancy[ip_pair][tid] =
                   std::pair<double, unsigned>(stat.occupancy(), stat.epoch());

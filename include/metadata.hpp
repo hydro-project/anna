@@ -100,7 +100,7 @@ extern hmap<Tier, TierMetadata, TierEnumHash> kTierMetadata;
 
 enum MetadataType { replication, server_stats, key_access, key_size };
 
-inline Key get_metadata_key(const ServerThread &st, unsigned tier_id,
+inline Key get_metadata_key(const ServerThread &st, Tier tier_id,
                             unsigned thread_num, MetadataType type) {
   string metadata_type;
 
@@ -122,7 +122,7 @@ inline Key get_metadata_key(const ServerThread &st, unsigned tier_id,
   return kMetadataIdentifier + kMetadataDelimiter + metadata_type +
          kMetadataDelimiter + st.public_ip() + kMetadataDelimiter +
          st.private_ip() + kMetadataDelimiter + std::to_string(thread_num) +
-         kMetadataDelimiter + std::to_string(tier_id);
+         kMetadataDelimiter + Tier_Name(tier_id);
 }
 
 // This version of the function should only be called with
