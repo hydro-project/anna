@@ -670,9 +670,8 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
     // redistribute data after node joins
     if (join_gossip_map.size() != 0) {
       set<Address> remove_address_set;
-
-      // assemble gossip
       AddressKeysetMap addr_keyset_map;
+
       for (const auto &join_pair : join_gossip_map) {
         Address address = join_pair.first;
         set<Key> key_set = join_pair.second;
@@ -710,6 +709,8 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
           serializers[stored_key_map[key].type_]->remove(key);
           stored_key_map.erase(key);
         }
+
+        join_remove_set.clear();
       }
     }
   }
