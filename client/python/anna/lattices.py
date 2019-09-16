@@ -103,7 +103,7 @@ class LWWPairLattice(Lattice):
 
 
 class SetLattice(Lattice):
-    def __init__(self, value={}):
+    def __init__(self, value=set()):
         if type(value) != set:
             raise ValueError('SetLattice can only be formed from a set.')
 
@@ -123,7 +123,7 @@ class SetLattice(Lattice):
             raise ValueError('Cannot merge SetLattice with invalid type ' +
                              str(type(other)) + '.')
 
-        new_set = {}
+        new_set = set()
 
         for v in other.val:
             new_set.insert(v)
@@ -137,9 +137,7 @@ class SetLattice(Lattice):
         res = SetValue()
 
         for v in self.val:
-            if type(v) == str:
-                v = bytes(v, 'utf-8')
-            else:
+            if type(v) != bytes:
                 raise ValueError('Unsupported type %s in SetLattice!' %
                                  (str(type(v))))
 
