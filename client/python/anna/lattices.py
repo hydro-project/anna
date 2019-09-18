@@ -137,6 +137,8 @@ class SetLattice(Lattice):
         res = SetValue()
 
         for v in self.val:
+            if type(v) == str:
+                v = bytes(v, 'utf-8')
             if type(v) != bytes:
                 raise ValueError('Unsupported type %s in SetLattice!' %
                                  (str(type(v))))
