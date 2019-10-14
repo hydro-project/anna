@@ -17,7 +17,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.6 FATAL_ERROR)
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/cli)
 
 SET(LIBRARY_DEPENDENCIES
-    protobuf
+    protobuf::libprotobuf
     anna-proto
     zmq
     hydro-zmq
