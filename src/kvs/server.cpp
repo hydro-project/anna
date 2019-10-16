@@ -194,6 +194,7 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
   Serializer *ordered_set_serializer;
   Serializer *sk_causal_serializer;
   Serializer *mk_causal_serializer;
+  Serializer *priority_serializer;
 
   if (kSelfTier == Tier::MEMORY) {
     MemoryLWWKVS *lww_kvs = new MemoryLWWKVS();
@@ -212,12 +213,16 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
         new MemoryMultiKeyCausalKVS();
     mk_causal_serializer =
         new MemoryMultiKeyCausalSerializer(multi_key_causal_kvs);
+
+    MemoryPriorityKVS *priority_kvs = new MemoryPriorityKVS();
+    priority_serializer = new MemoryPrioritySerializer(priority_kvs);
   } else if (kSelfTier == Tier::DISK) {
     lww_serializer = new DiskLWWSerializer(thread_id);
     set_serializer = new DiskSetSerializer(thread_id);
     ordered_set_serializer = new DiskOrderedSetSerializer(thread_id);
     sk_causal_serializer = new DiskSingleKeyCausalSerializer(thread_id);
     mk_causal_serializer = new DiskMultiKeyCausalSerializer(thread_id);
+    priority_serializer = new DiskPrioritySerializer(thread_id);
   } else {
     log->info("Invalid node type");
     exit(1);
@@ -228,6 +233,7 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
   serializers[LatticeType::ORDERED_SET] = ordered_set_serializer;
   serializers[LatticeType::SINGLE_CAUSAL] = sk_causal_serializer;
   serializers[LatticeType::MULTI_CAUSAL] = mk_causal_serializer;
+  serializers[LatticeType::PRIORITY] = priority_serializer;
 
   // the set of changes made on this thread since the last round of gossip
   set<Key> local_changeset;
