@@ -17,6 +17,7 @@
 
 #include <fstream>
 #include <string>
+#include <unistd.h> // for ftruncate(2)
 
 #include "base_kv_store.hpp"
 #include "common.hpp"
@@ -40,6 +41,7 @@ typedef KVStore<Key, SingleKeyCausalLattice<SetLattice<string>>>
     MemorySingleKeyCausalKVS;
 typedef KVStore<Key, MultiKeyCausalLattice<SetLattice<string>>>
     MemoryMultiKeyCausalKVS;
+typedef KVStore<Key, PriorityLattice<double, string>> MemoryPriorityKVS;
 
 // a map that represents which keys should be sent to which IP-port combinations
 typedef map<Address, set<Key>> AddressKeysetMap;
@@ -174,6 +176,29 @@ public:
   void remove(const Key &key) { kvs_->remove(key); }
 };
 
+class MemoryPrioritySerializer : public Serializer {
+  MemoryPriorityKVS *kvs_;
+
+public:
+  MemoryPrioritySerializer(MemoryPriorityKVS *kvs) : kvs_(kvs) {}
+
+  string get(const Key &key, AnnaError &error) {
+    auto val = kvs_->get(key, error);
+    if (val.reveal().value == "") {
+      error = AnnaError::KEY_DNE;
+    }
+    return serialize(val);
+  }
+
+  unsigned put(const Key &key, const string &serialized) {
+    PriorityLattice<double, string> val = deserialize_priority(serialized);
+    kvs_->put(key, val);
+    return kvs_->size(key);
+  }
+
+  void remove(const Key &key) { kvs_->remove(key); }
+};
+
 class DiskLWWSerializer : public Serializer {
   unsigned tid_;
   string ebs_root_;
@@ -237,14 +262,16 @@ public:
       std::cerr << "Failed to parse payload." << std::endl;
       return 0;
     } else {
-      std::fstream output(fname,
-                          std::ios::out | std::ios::trunc | std::ios::binary);
       if (input_value.timestamp() >= original_value.timestamp()) {
+        std::fstream output(fname,
+                            std::ios::out | std::ios::trunc | std::ios::binary);
         if (!input_value.SerializeToOstream(&output)) {
           std::cerr << "Failed to write payload" << std::endl;
         }
+        return output.tellp();
+      } else {
+        return input.tellp();
       }
-      return output.tellp();
     }
   }
 
@@ -710,6 +737,80 @@ public:
     string fname = ebs_root_ + "ebs_" + std::to_string(tid_) + "/" + key;
 
     if (std::remove(fname.c_str()) != 0) {
+      std::cerr << "Error deleting file" << std::endl;
+    }
+  }
+};
+
+class DiskPrioritySerializer : public Serializer {
+  unsigned tid_;
+  string ebs_root_;
+
+  //! Compute the name of the file that stores a value for a given key
+  string fname(const Key &key) const {
+    return ebs_root_ + "ebs_" + std::to_string(tid_) + "/" + key;
+  }
+
+public:
+  DiskPrioritySerializer(unsigned tid) : tid_(tid) {
+    YAML::Node conf = YAML::LoadFile("conf/anna-config.yml");
+
+    ebs_root_ = conf["ebs"].as<string>();
+
+    if (ebs_root_.back() != '/')
+      ebs_root_ += "/";
+  }
+
+  string get(const Key &key, AnnaError &error) override {
+    string res;
+    PriorityValue value;
+
+    std::fstream input(fname(key), std::ios::in | std::ios::binary);
+
+    if (!input) {
+      error = AnnaError::KEY_DNE;
+    } else if (!value.ParseFromIstream(&input)) {
+      std::cerr << "Failed to parse payload." << std::endl;
+      error = AnnaError::KEY_DNE;
+    } else if (value.value() == "") {
+      error = AnnaError::KEY_DNE;
+    } else {
+      value.SerializeToString(&res);
+    }
+    return res;
+  }
+
+  unsigned put(const Key &key, const string &serialized) override {
+    PriorityValue input_value;
+    input_value.ParseFromString(serialized);
+
+    int fd = open(fname(key).c_str(), O_RDWR | O_CREAT);
+    if (fd == -1) {
+      std::cerr << "Failed to open file" << std::endl;
+      return 0;
+    }
+
+    PriorityValue original_value;
+    if (!original_value.ParseFromFileDescriptor(fd) ||
+        input_value.priority() < original_value.priority()) {
+      // resize the file to 0
+      ftruncate(fd, 0);
+      // ftruncate does not change the fd's file offset, so we set it to 0
+      lseek(fd, 0, SEEK_SET);
+      if (!input_value.SerializeToFileDescriptor(fd))
+        std::cerr << "Failed to write payload" << std::endl;
+    }
+
+    unsigned pos = lseek(fd, 0, SEEK_CUR);
+
+    if (close(fd) == -1)
+      std::cerr << "Problem closing file" << std::endl;
+
+    return pos;
+  }
+
+  void remove(const Key &key) override {
+    if (std::remove(fname(key).c_str()) != 0) {
       std::cerr << "Error deleting file" << std::endl;
     }
   }
