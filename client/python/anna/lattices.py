@@ -498,7 +498,7 @@ class PriorityLattice(Lattice):
     def merge(self, other):
         if other.priority < self.priority:
             return other
-        else
+        else:
             return self
 
     def serialize(self):

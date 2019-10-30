@@ -160,7 +160,7 @@ class BaseAnnaClient():
             value = SetLattice(values)
 
             return MultiKeyCausalLattice(vc, dependencies, value)
-        elif tup.lattice_type = PRIORITY:
+        elif tup.lattice_type == PRIORITY:
             val = PriorityValue()
             val.ParseFromString(tup.payload)
 
