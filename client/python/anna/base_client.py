@@ -160,11 +160,11 @@ class BaseAnnaClient():
             value = SetLattice(values)
 
             return MultiKeyCausalLattice(vc, dependencies, value)
-        elif tup.lattice_type = PRIORITY:
+        elif tup.lattice_type == PRIORITY:
             val = PriorityValue()
             val.ParseFromString(tup.payload)
 
-            return PriorityLatice(val.priority, val.value)
+            return PriorityLattice(val.priority, val.value)
         else:
             raise ValueError('Unsupported type cannot be serialized: ' +
                              str(tup.lattice_type))
