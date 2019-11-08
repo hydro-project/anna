@@ -164,7 +164,7 @@ class BaseAnnaClient():
             val = PriorityValue()
             val.ParseFromString(tup.payload)
 
-            return PriorityLatice(val.priority, val.value)
+            return PriorityLattice(val.priority, val.value)
         else:
             raise ValueError('Unsupported type cannot be serialized: ' +
                              str(tup.lattice_type))
