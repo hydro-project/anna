@@ -38,7 +38,7 @@ mkdir -p conf
 # Check if the context that we are running in is EC2 or not. If it is, we
 # determine separate private and public IP addresses. Otherwise, we use the
 # same one for both.
-IS_EC2=`curl -s http://instance-data.ec2.internal`
+IS_EC2=`curl -s http://169.254.169.254`
 PRIVATE_IP=`ifconfig eth0 | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1 }'`
 if [[ ! -z "$IS_EC2" ]]; then
   PUBLIC_IP=`curl http://169.254.169.254/latest/meta-data/public-ipv4`
