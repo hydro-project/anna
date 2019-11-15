@@ -14,9 +14,9 @@
 
 from anna.anna_pb2 import (
     # Anna's lattice types as an enum
-    LWW, SET, ORDERED_SET, SINGLE_CAUSAL, MULTI_CAUSAL,
+    LWW, SET, ORDERED_SET, SINGLE_CAUSAL, MULTI_CAUSAL, PRIORITY,
     # Serialized representations of Anna's lattices
-    LWWValue, SetValue, SingleKeyCausalValue, MultiKeyCausalValue
+    LWWValue, SetValue, SingleKeyCausalValue, MultiKeyCausalValue, PriorityValue
 )
 
 
@@ -101,9 +101,8 @@ class LWWPairLattice(Lattice):
 
         return res, LWW
 
-
 class SetLattice(Lattice):
-    def __init__(self, value={}):
+    def __init__(self, value=set()):
         if type(value) != set:
             raise ValueError('SetLattice can only be formed from a set.')
 
@@ -123,7 +122,7 @@ class SetLattice(Lattice):
             raise ValueError('Cannot merge SetLattice with invalid type ' +
                              str(type(other)) + '.')
 
-        new_set = {}
+        new_set = set()
 
         for v in other.val:
             new_set.insert(v)
@@ -137,9 +136,7 @@ class SetLattice(Lattice):
         res = SetValue()
 
         for v in self.val:
-            if type(v) == str:
-                v = bytes(v, 'utf-8')
-            else:
+            if type(v) != bytes:
                 raise ValueError('Unsupported type %s in SetLattice!' %
                                  (str(type(v))))
 
@@ -316,7 +313,7 @@ class MapLattice(Lattice):
 class VectorClock(MapLattice):
     def __init__(self, mp, deserialize=False):
         if type(mp) != dict:
-            raise ValueError(f'VectorClock must be a dict, not {type(mp)}.')
+            raise ValueError('VectorClock must be a dict, not {type(mp)}.')
 
         if deserialize:
             self.mp = VectorClock._deserialize(mp)
@@ -476,3 +473,37 @@ class MultiKeyCausalLattice(Lattice):
             mkcv.values.add(v)
 
         return mkcv, MULTI_CAUSAL
+
+class PriorityLattice(Lattice):
+    def __init__(self, priority, value):
+        if type(priority) != float or type(value) != bytes:
+            raise ValueError('PriorityLattice must be a double-bytes pair.')
+        
+        self.priority = priority
+        self.value = value
+
+    def reveal(self):
+        return self.value
+
+    def assign(self, value):
+        if type(value) != str:
+            value = bytes(value, 'utf-8')
+            
+        if type(value) != tuple or type(value[0]) != float or type(value[1]) != bytes:
+            raise ValueError('PriorityLattice must be a double-bytes pair.')
+
+        self.priority = value[0]
+        self.value = value[1]
+
+    def merge(self, other):
+        if other.priority < self.priority:
+            return other
+        else:
+            return self
+
+    def serialize(self):
+        res = PriorityValue()
+        res.priority = self.priority
+        res.value = self.value
+        
+        return res, PRIORITY
