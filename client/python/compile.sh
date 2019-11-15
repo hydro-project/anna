@@ -15,13 +15,21 @@
 #  limitations under the License.
 
 cd anna
-protoc -I=../../../common/proto/ --python_out=. anna.proto shared.proto
+protoc -I=../../../common/proto/ --python_out=. anna.proto shared.proto causal.proto droplet.proto
 
 if [[ "$OSTYPE" = "darwin"* ]]; then
   sed -i "" "s/import shared_pb2/from . import shared_pb2/g" anna_pb2.py
+  sed -i "" "s/import shared_pb2/from . import shared_pb2/g" causal_pb2.py
+  sed -i "" "s/import anna_pb2/from . import anna_pb2/g" causal_pb2.py
+  sed -i "" "s/import droplet_pb2/from . import droplet_pb2/g" causal_pb2.py
+  sed -i "" "s/import shared_pb2/from . import shared_pb2/g" droplet_pb2.py
 else # We assume other distributions are Linux.
   # NOTE: This is a hack that we need to use because our protobufs are
   # not properly packaged, and generally protobufs are supposed to be
   # compiled in the same package that they are defined.
   sed -i "s|import shared_pb2|from . import shared_pb2|g" anna_pb2.py
+  sed -i "s|import shared_pb2|from . import shared_pb2|g" causal_pb2.py
+  sed -i "s|import anna_pb2|from . import anna_pb2|g" causal_pb2.py
+  sed -i "s|import droplet_pb2|from . import droplet_pb2|g" causal_pb2.py
+  sed -i "s|import shared_pb2|from . import shared_pb2|g" droplet_pb2.py
 fi

@@ -92,12 +92,41 @@ class BaseAnnaClient():
     # input and returns either a lattice data structure corresponding to the
     # type of the KeyTuple.
     def _deserialize(self, tup):
-        if tup.lattice_type == LWW:
+        if isinstance(tup, CausalTuple):
+            # Deserialize multi-key causal lattices
+            val = MultiKeyCausalValue()
+            val.ParseFromString(tup.payload)
+
+            # Deserialize the vector_clock stored in the Protobuf into a
+            # MapLattice, where each value is a MaxIntLattice of the VC
+            # counter.
+            vc = VectorClock(val.vector_clock, True)
+
+            # Deserialize the set of dependencies of this key into a MapLattice
+            # where the keys are names of other KVS keys and the values are
+            # MapLattices that have the vector clocks for those keys.
+            dep_map = {}
+            for kv in val.dependencies:
+                key = kv.key
+                dep_map[key] = VectorClock(kv.vector_clock, True)
+
+            # Create a SetLattice with the value(s) stored by this lattice.
+            values = set()
+            for v in val.values():
+                values.add(v)
+
+            dependencies = MapLattice(dep_map)
+            value = SetLattice(values)
+
+            return MultiKeyCausalLattice(vc, dependencies, value)
+
+        elif tup.lattice_type == LWW:
             # Deserialize last-writer-wins lattices
             val = LWWValue()
             val.ParseFromString(tup.payload)
 
             return LWWPairLattice(val.timestamp, val.value)
+
         elif tup.lattice_type == SET:
             # Deserialize unordered-set lattices
             s = SetValue()
@@ -121,6 +150,7 @@ class BaseAnnaClient():
         elif tup.lattice_type == SINGLE_CAUSAL:
             # Deserialize single-key causal lattices
             val = SingleKeyCausalValue()
+            val.ParseFromString(tup.payload)
 
             # Deserialize the vector_clock stored in the Protobuf into a
             # MapLattice, where each value is a MaxIntLattice of the VC
@@ -137,6 +167,7 @@ class BaseAnnaClient():
         elif tup.lattice_type == MULTI_CAUSAL:
             # Deserialize multi-key causal lattices
             val = MultiKeyCausalValue()
+            val.ParseFromString(tup.payload)
 
             # Deserialize the vector_clock stored in the Protobuf into a
             # MapLattice, where each value is a MaxIntLattice of the VC
