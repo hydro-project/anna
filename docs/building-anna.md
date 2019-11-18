@@ -17,4 +17,4 @@ Anna can be built with Clang (version 5 or newer) or gcc (version 7 or newer). `
 
 By default, the script will run as `bash scripts/build.sh -bRelease -j1`. 
 
-This will generate a variety of executables, primarily in `build/target`, which houses all of the KVS server executables, and in `build/client`, which has the CPP-based interactive CLI for Anna. Once Anna is built, you can run it in [local mode](docs/local-mode.md).
+This will generate a variety of executables, primarily in `build/target`, which houses all of the KVS server executables, and in `build/client`, which has the CPP-based interactive CLI for Anna. Once Anna is built, you can run it in [local mode](local-mode.md).
