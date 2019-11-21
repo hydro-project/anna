@@ -19,6 +19,7 @@ from anna.anna_pb2 import (
     LWWValue, SetValue, SingleKeyCausalValue, MultiKeyCausalValue, PriorityValue,
     KeyRequest
 )
+from anna.causal_pb2 import CausalTuple
 from anna.lattices import (
     Lattice,
     LWWPairLattice,
