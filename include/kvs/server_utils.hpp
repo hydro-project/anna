@@ -69,6 +69,53 @@ public:
 
     return serialize(val);
   }
+  
+  // TODO: this method is put here but it can receive either lww or set type.
+  // the location is subject to change. 
+  string get_delta(KeyRequest &req, const Key &key, bytes payload) {
+
+      KeyProperty keyProperty = stored_key_map[key].type_;
+      KeyTuple *tp = req.add_tuples();
+
+        // get value
+      auto val;
+    val = kvs_->get(key, error);
+    if (val.size().reveal() == 0) {
+          tp->set_error(AnnaError::KEY_DNE);
+      }
+    
+    // check the time stamp & value
+      // write response
+      if ((keyProperty == LatticeType::LWW && val.timestamp == payload) ||
+        (keyProperty == LatticeType::SET && val.value == payload)) {
+        
+        tp->set_payload("None");
+        tp->set_delta(true);
+
+    } else if ((keyProperty == LatticeType::LWW && val.timestamp != payload) ||
+      (keyProperty == LatticeType::SET && val.value != payload)) {
+
+      Serializer * serializer = serializers[stored_key_map[key].type_]
+      serialized = serializer(val);
+      tp->set_payload(serialized);
+      tp->set_delta(false);
+
+      }
+      else {
+        // indicate in ACK 
+        tp->set_error(AnnaError::LATTICE);
+        return;
+      }
+
+    tp->set_lattice_type(keyProperty);
+    tp->set_error(AnnaError::NO_ERROR);
+  
+  // TODO: what to return?
+  string serialized_response;
+  tp.SerializeToString(&serialized_response);
+    return tp;
+  
+  }
 
   unsigned put(const Key &key, const string &serialized) {
     LWWPairLattice<string> val = deserialize_lww(serialized);
