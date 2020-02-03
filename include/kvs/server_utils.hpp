@@ -111,7 +111,6 @@ public:
         return "ACK";
       }
     }
-    
   }
 
   unsigned put(const Key &key, const string &serialized) {
