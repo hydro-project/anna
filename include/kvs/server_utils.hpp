@@ -97,7 +97,7 @@ public:
 
   string get(const Key &key, AnnaError &error, bool delta, const string &previous_payload) {
     auto val = kvs_->get(key, error);
-    
+
     if (val.size().reveal() == 0) {
       error = AnnaError::KEY_DNE;
     }
@@ -111,6 +111,7 @@ public:
         return "ACK";
       }
     }
+    
   }
 
   unsigned put(const Key &key, const string &serialized) {
