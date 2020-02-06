@@ -60,14 +60,24 @@ class MemoryLWWSerializer : public Serializer {
 public:
   MemoryLWWSerializer(MemoryLWWKVS *kvs) : kvs_(kvs) {}
 
-  string get(const Key &key, AnnaError &error) {
+  string get(const Key &key, AnnaError &error, bool delta, const string &previous_payload) {
+
     auto val = kvs_->get(key, error);
 
-    if (val.reveal().value == "") {
+    if (val.size().reveal() == 0) {
       error = AnnaError::KEY_DNE;
+    } 
+
+    if (!delta) {
+      return serialize(val);
+    } else {
+      if (val.reveal().timestamp != deserialize_lww(previous_payload).reveal().timestamp) {
+        return serialize(val);
+      } else {
+        return "ACK";
+      }
     }
 
-    return serialize(val);
   }
 
   unsigned put(const Key &key, const string &serialized) {
@@ -85,12 +95,22 @@ class MemorySetSerializer : public Serializer {
 public:
   MemorySetSerializer(MemorySetKVS *kvs) : kvs_(kvs) {}
 
-  string get(const Key &key, AnnaError &error) {
+  string get(const Key &key, AnnaError &error, bool delta, const string &previous_payload) {
     auto val = kvs_->get(key, error);
+
     if (val.size().reveal() == 0) {
       error = AnnaError::KEY_DNE;
     }
-    return serialize(val);
+    
+    if (!delta) {
+      return serialize(val);
+    } else {
+      if (val.value.reveal() != previous_payload) {
+        return serialize(val);
+      } else {
+        return "ACK";
+      }
+    }
   }
 
   unsigned put(const Key &key, const string &serialized) {
@@ -842,3 +862,5 @@ struct PendingGossip {
 };
 
 #endif // INCLUDE_KVS_SERVER_UTILS_HPP_
+
+
