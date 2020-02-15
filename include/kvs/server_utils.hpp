@@ -105,7 +105,7 @@ public:
     if (!delta) {
       return serialize(val);
     } else {
-      if (val.value.reveal() != previous_payload) {
+      if (val.reveal().value != previous_payload) {
         return serialize(val);
       } else {
         return "ACK";
