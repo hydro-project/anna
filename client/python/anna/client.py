@@ -32,6 +32,16 @@ from anna.zmq_util import (
     SocketCache
 )
 
+from anna.lattice import (
+    LWWPairLattice,
+    SetLattice
+)
+
+from anna.anna_pb2 import (
+    # Anna's lattice types as an enum
+    LWW, SET)
+
+
 
 class AnnaTcpClient(BaseAnnaClient):
     def __init__(self, elb_addr, ip, local=False, offset=0):
@@ -76,6 +86,8 @@ class AnnaTcpClient(BaseAnnaClient):
 
         self.rid = 0
 
+        self.cache = {}
+
     def get(self, keys):
         if type(keys) != list:
             keys = [keys]
@@ -114,6 +126,69 @@ class AnnaTcpClient(BaseAnnaClient):
                     kv_pairs[tup.key] = self._deserialize(tup)
 
         return kv_pairs
+
+    def get_delta(self, keys):
+        if type(keys) != list:
+            keys = [keys]
+
+        worker_addresses = {}
+        for key in keys:
+            worker_addresses[key] = (self._get_worker_address(key))
+
+        # Initialize all KV pairs to 0. Only change a value if we get a valid
+        # response from the server.
+        kv_pairs = {}
+        for key in keys:
+            kv_pairs[key] = None
+
+        request_ids = []
+        for key in worker_addresses:
+            if key in self.cache:
+                # TODO: if the key is in cache, 
+                # send the previous_payplad along with the request
+                kv_pairs[key] = self.cache[key]
+
+                if worker_addresses[key]:
+                    send_sock = self.pusher_cache.get(worker_addresses[key])
+
+                    req, _ = self._prepare_delta_data_request([key], self._serialize(self.cache[key])[0])
+                    req.type = GET
+
+                    send_request(req, send_sock)
+                    request_ids.append(req.request_id)
+
+            else:
+                if worker_addresses[key]:
+                    send_sock = self.pusher_cache.get(worker_addresses[key])
+
+                    req, _ = self._prepare_data_request([key])
+                    req.type = GET
+
+                    send_request(req, send_sock)
+                    request_ids.append(req.request_id)
+
+            # Wait for all responses to return.
+            responses = recv_response(request_ids, self.response_puller,
+                                      KeyResponse)
+
+            for response in responses:
+                for tup in response.tuples:
+                    if tup.invalidate:
+                        self._invalidate_cache(tup.key)
+
+                    lattice_value = self._deserialize(tup)
+                    if tup.error == NO_ERROR:
+                        kv_pairs[tup.key] = lattice_value
+                        cache[tup.key] = lattice_value
+
+                    # if tup.lattice_type == LWW:
+                    #     cache[tup.key] = LWWPairLattice(tup.timestamp, "")
+                    # if tup.lattice_type == SET:
+                    #     cache[tup.key] = SetLattice(tup.payload)
+
+            return kv_pairs
+
+
 
     def get_all(self, keys):
         if type(keys) != list:

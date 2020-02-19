@@ -39,6 +39,8 @@ void user_request_handler(
     // first check if the thread is responsible for the key
     Key key = tuple.key();
     string payload = tuple.payload();
+    bool delta = tuple.delta();
+    bytes previous_payload = tuple.previous_payload();
 
     ServerThreadList threads = kHashRingUtil->get_responsible_threads(
         wt.replication_response_connect_address(), key, is_metadata(key),
@@ -76,10 +78,11 @@ void user_request_handler(
 
             tp->set_error(AnnaError::KEY_DNE);
           } else {
-            auto res = process_get(key, serializers[stored_key_map[key].type_]);
+            auto res = process_get(key, serializers[stored_key_map[key].type_], delta, previous_payload);
             tp->set_lattice_type(stored_key_map[key].type_);
             tp->set_payload(res.first);
             tp->set_error(res.second);
+            // TODO: do I need to set anything else here?
           }
         } else if (request_type == RequestType::PUT) {
           if (tuple.lattice_type() == LatticeType::NONE) {

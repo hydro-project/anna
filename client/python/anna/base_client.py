@@ -233,6 +233,31 @@ class BaseAnnaClient():
 
         return (req, tuples)
 
+    # Helper function to create a KeyRequest (see
+    # hydro-project/common/proto/anna.proto). Takes in a key name and returns a
+    # tuple containing a KeyRequest and a KeyTuple contained in that KeyRequest
+    # with response_address, request_id, and address_cache_size automatically
+    # populated.
+    def _prepare_delta_data_request(self, keys, serialized_previous):
+        req = KeyRequest()
+        req.request_id = self._get_request_id()
+        req.response_address = self.response_address
+
+        tuples = []
+
+        for key in keys:
+            # TODO: is tup included in req?
+            tup = req.tuples.add()
+            tuples.append(tup)
+            tup.key = key
+            tup.previous_payload = serialized_previous
+
+            if self.address_cache and key in self.address_cache:
+                tup.address_cache_size = len(self.address_cache[key])
+
+        return (req, tuples)
+
+
     # Returns and increments a request ID. Loops back after 10,000 requests.
     def _get_request_id(self):
         response = self.ut.get_ip() + ':' + str(self.rid)

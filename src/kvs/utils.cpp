@@ -51,9 +51,9 @@ void send_gossip(AddressKeysetMap &addr_keyset_map, SocketCache &pushers,
 }
 
 std::pair<string, AnnaError> process_get(const Key &key,
-                                         Serializer *serializer) {
+                                         Serializer *serializer, bool delta, const string &previous_payload) {
   AnnaError error = AnnaError::NO_ERROR;
-  auto res = serializer->get(key, error);
+  auto res = serializer->get(key, error, delta, previous_payload);
   return std::pair<string, AnnaError>(std::move(res), error);
 }
 
