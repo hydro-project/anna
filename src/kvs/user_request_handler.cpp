@@ -82,7 +82,6 @@ void user_request_handler(
             tp->set_lattice_type(stored_key_map[key].type_);
             tp->set_payload(res.first);
             tp->set_error(res.second);
-            // TODO: do I need to set anything else here?
           }
         } else if (request_type == RequestType::PUT) {
           if (tuple.lattice_type() == LatticeType::NONE) {

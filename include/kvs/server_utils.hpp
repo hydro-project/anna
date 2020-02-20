@@ -105,7 +105,8 @@ public:
     if (!delta) {
       return serialize(val);
     } else {
-      if (val.reveal().value != previous_payload) {
+      SetLattice<string> deserialized_payload = deserialize_set(previous_payload);
+      if (val.reveal().value operator!= previous_payload.reveal()) {
         return serialize(val);
       } else {
         return "ACK";

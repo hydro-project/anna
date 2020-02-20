@@ -177,6 +177,10 @@ class AnnaTcpClient(BaseAnnaClient):
                         self._invalidate_cache(tup.key)
 
                     lattice_value = self._deserialize(tup)
+
+                    if (lattice_value.payload == "ACK"):
+                        lattice_value = self.cache[key]
+
                     if tup.error == NO_ERROR:
                         kv_pairs[tup.key] = lattice_value
                         cache[tup.key] = lattice_value
