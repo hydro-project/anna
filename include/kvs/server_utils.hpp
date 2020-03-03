@@ -48,7 +48,7 @@ typedef map<Address, set<Key>> AddressKeysetMap;
 
 class Serializer {
 public:
-  virtual string get(const Key &key, AnnaError &error) = 0;
+  virtual string get(const Key &key, AnnaError &error, bool delta = false, const string &previous_payload = "") = 0;
   virtual unsigned put(const Key &key, const string &serialized) = 0;
   virtual void remove(const Key &key) = 0;
   virtual ~Serializer(){};
@@ -60,7 +60,7 @@ class MemoryLWWSerializer : public Serializer {
 public:
   MemoryLWWSerializer(MemoryLWWKVS *kvs) : kvs_(kvs) {}
 
-  string get(const Key &key, AnnaError &error, bool delta, const string &previous_payload) {
+  string get(const Key &key, AnnaError &error, bool delta = false, const string &previous_payload = "") {
 
     auto val = kvs_->get(key, error);
 
@@ -95,7 +95,7 @@ class MemorySetSerializer : public Serializer {
 public:
   MemorySetSerializer(MemorySetKVS *kvs) : kvs_(kvs) {}
 
-  string get(const Key &key, AnnaError &error, bool delta, const string &previous_payload) {
+  string get(const Key &key, AnnaError &error, bool delta = false, const string &previous_payload = "") {
     auto val = kvs_->get(key, error);
 
     if (val.size().reveal() == 0) {
@@ -106,7 +106,17 @@ public:
       return serialize(val);
     } else {
       SetLattice<string> deserialized_payload = deserialize_set(previous_payload);
-      if (val.reveal().value operator!= previous_payload.reveal()) {
+
+      bool same_set = true;
+      if (deserialized_payload.reveal().size() != val.reveal().size()) {
+        same_set = false;
+      }
+      // if (std::set_difference(val.reveal(), val.reveal() + val.reveal().size(), deserialized_payload.reveal(), deserialized_payload.reveal() + deserialized_payload.reveal.size(), v1.begin()) - v1.begin() != 0) {
+      // for (std::string::iterator it=str.begin(); it!=str.end(); ++it) {
+
+      // }
+      // if (!same_set) {
+       if (val.reveal() == deserialized_payload.reveal()) {
         return serialize(val);
       } else {
         return "ACK";
@@ -129,7 +139,7 @@ class MemoryOrderedSetSerializer : public Serializer {
 public:
   MemoryOrderedSetSerializer(MemoryOrderedSetKVS *kvs) : kvs_(kvs) {}
 
-  string get(const Key &key, AnnaError &error) {
+  string get(const Key &key, AnnaError &error, bool delta = false, const string &previous_payload = "") {
     auto val = kvs_->get(key, error);
     if (val.size().reveal() == 0) {
       error = AnnaError::KEY_DNE;
@@ -152,7 +162,7 @@ class MemorySingleKeyCausalSerializer : public Serializer {
 public:
   MemorySingleKeyCausalSerializer(MemorySingleKeyCausalKVS *kvs) : kvs_(kvs) {}
 
-  string get(const Key &key, AnnaError &error) {
+  string get(const Key &key, AnnaError &error, bool delta = false, const string &previous_payload = "") {
     auto val = kvs_->get(key, error);
     if (val.reveal().value.size().reveal() == 0) {
       error = AnnaError::KEY_DNE;
@@ -177,7 +187,7 @@ class MemoryMultiKeyCausalSerializer : public Serializer {
 public:
   MemoryMultiKeyCausalSerializer(MemoryMultiKeyCausalKVS *kvs) : kvs_(kvs) {}
 
-  string get(const Key &key, AnnaError &error) {
+  string get(const Key &key, AnnaError &error, bool delta = false, const string &previous_payload = "") {
     auto val = kvs_->get(key, error);
     if (val.reveal().value.size().reveal() == 0) {
       error = AnnaError::KEY_DNE;
@@ -203,7 +213,7 @@ class MemoryPrioritySerializer : public Serializer {
 public:
   MemoryPrioritySerializer(MemoryPriorityKVS *kvs) : kvs_(kvs) {}
 
-  string get(const Key &key, AnnaError &error) {
+  string get(const Key &key, AnnaError &error, bool delta = false, const string &previous_payload = "") {
     auto val = kvs_->get(key, error);
     if (val.reveal().value == "") {
       error = AnnaError::KEY_DNE;
@@ -235,7 +245,7 @@ public:
     }
   }
 
-  string get(const Key &key, AnnaError &error) {
+  string get(const Key &key, AnnaError &error, bool delta = false, const string &previous_payload = "") {
     string res;
     LWWValue value;
 
@@ -320,7 +330,7 @@ public:
     }
   }
 
-  string get(const Key &key, AnnaError &error) {
+  string get(const Key &key, AnnaError &error, bool delta = false, const string &previous_payload = "") {
     string res;
     SetValue value;
 
@@ -416,7 +426,7 @@ public:
     }
   }
 
-  string get(const Key &key, AnnaError &error) {
+  string get(const Key &key, AnnaError &error, bool delta = false, const string &previous_payload = "") {
     string res;
     SetValue value;
 
@@ -512,7 +522,7 @@ public:
     }
   }
 
-  string get(const Key &key, AnnaError &error) {
+  string get(const Key &key, AnnaError &error, bool delta = false, const string &previous_payload = "") {
     string res;
     SingleKeyCausalValue value;
 
@@ -629,7 +639,7 @@ public:
     }
   }
 
-  string get(const Key &key, AnnaError &error) {
+  string get(const Key &key, AnnaError &error, bool delta = false, const string &previous_payload = "") {
     string res;
     MultiKeyCausalValue value;
 
@@ -782,7 +792,7 @@ public:
       ebs_root_ += "/";
   }
 
-  string get(const Key &key, AnnaError &error) override {
+  string get(const Key &key, AnnaError &error, bool delta = false, const string &previous_payload = "") override {
     string res;
     PriorityValue value;
 

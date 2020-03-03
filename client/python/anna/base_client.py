@@ -251,6 +251,7 @@ class BaseAnnaClient():
             tuples.append(tup)
             tup.key = key
             tup.previous_payload = serialized_previous
+            tup.delta = True
 
             if self.address_cache and key in self.address_cache:
                 tup.address_cache_size = len(self.address_cache[key])

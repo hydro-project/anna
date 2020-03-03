@@ -40,7 +40,7 @@ void user_request_handler(
     Key key = tuple.key();
     string payload = tuple.payload();
     bool delta = tuple.delta();
-    bytes previous_payload = tuple.previous_payload();
+    const string previous_payload = tuple.previous_payload();
 
     ServerThreadList threads = kHashRingUtil->get_responsible_threads(
         wt.replication_response_connect_address(), key, is_metadata(key),
@@ -76,12 +76,20 @@ void user_request_handler(
           if (stored_key_map.find(key) == stored_key_map.end() ||
               stored_key_map[key].type_ == LatticeType::NONE) {
 
-            tp->set_error(AnnaError::KEY_DNE);
+            tp->set_error(AnnaError::KEY_DNE); 
           } else {
+
             auto res = process_get(key, serializers[stored_key_map[key].type_], delta, previous_payload);
             tp->set_lattice_type(stored_key_map[key].type_);
-            tp->set_payload(res.first);
+            if (res.first == "ACK") {
+              tp->set_identical(true);
+              std::cout << "receive ACK in u_r_h" << std::endl;
+ 
+            } else {
+              tp->set_payload(res.first);
+            }
             tp->set_error(res.second);
+
           }
         } else if (request_type == RequestType::PUT) {
           if (tuple.lattice_type() == LatticeType::NONE) {

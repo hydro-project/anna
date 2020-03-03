@@ -34,6 +34,8 @@ void send_gossip(AddressKeysetMap &addr_keyset_map, SocketCache &pushers,
         type = stored_key_map[key].type_;
       }
 
+
+
       auto res = process_get(key, serializers[type]);
 
       if (res.second == 0) {

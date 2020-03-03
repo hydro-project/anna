@@ -178,17 +178,12 @@ class AnnaTcpClient(BaseAnnaClient):
 
                     lattice_value = self._deserialize(tup)
 
-                    if (lattice_value.payload == "ACK"):
+                    if (lattice_value.identical):
                         lattice_value = self.cache[key]
 
                     if tup.error == NO_ERROR:
                         kv_pairs[tup.key] = lattice_value
                         cache[tup.key] = lattice_value
-
-                    # if tup.lattice_type == LWW:
-                    #     cache[tup.key] = LWWPairLattice(tup.timestamp, "")
-                    # if tup.lattice_type == SET:
-                    #     cache[tup.key] = SetLattice(tup.payload)
 
             return kv_pairs
 

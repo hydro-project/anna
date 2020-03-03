@@ -92,7 +92,7 @@ void send_gossip(AddressKeysetMap &addr_keyset_map, SocketCache &pushers,
                  map<Key, KeyProperty> &stored_key_map);
 
 std::pair<string, AnnaError> process_get(const Key &key,
-                                         Serializer *serializer);
+                                         Serializer *serializer, bool delta = false, const string& previous_payload = "");
 
 void process_put(const Key &key, LatticeType lattice_type,
                  const string &payload, Serializer *serializer,

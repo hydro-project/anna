@@ -124,6 +124,23 @@ public:
     return request_str;
   }
 
+    string get_key_request_delta(Key key, string ip, string previous_payload) {
+    KeyRequest request;
+    request.set_type(RequestType::GET);
+    request.set_response_address(UserThread(ip, 0).response_connect_address());
+    request.set_request_id(kRequestId);
+
+    KeyTuple *tp = request.add_tuples();
+    tp->set_key(std::move(key));
+    tp->set_delta(true);
+    tp->set_previous_payload(previous_payload);
+
+    string request_str;
+    request.SerializeToString(&request_str);
+
+    return request_str;
+  }
+
   string put_key_request(Key key, LatticeType lattice_type, string payload,
                          string ip) {
     KeyRequest request;
