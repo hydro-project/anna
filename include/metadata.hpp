@@ -19,6 +19,7 @@
 #include "threads.hpp"
 
 const string kMetadataTypeReplication = "replication";
+const string kDeltaRequestIdentical = "identical";
 
 struct TierEnumHash {
   template <typename T> std::size_t operator()(T t) const {

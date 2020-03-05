@@ -24,6 +24,7 @@
 #include "kvs_common.hpp"
 #include "lattices/lww_pair_lattice.hpp"
 #include "yaml-cpp/yaml.h"
+#include "metadata.hpp"
 
 // Define the garbage collect threshold
 #define GARBAGE_COLLECT_THRESHOLD 10000000
@@ -74,7 +75,7 @@ public:
       if (val.reveal().timestamp != deserialize_lww(previous_payload).reveal().timestamp) {
         return serialize(val);
       } else {
-        return "ACK";
+        return kDeltaRequestIdentical;
       }
     }
 
@@ -107,19 +108,10 @@ public:
     } else {
       SetLattice<string> deserialized_payload = deserialize_set(previous_payload);
 
-      bool same_set = true;
-      if (deserialized_payload.reveal().size() != val.reveal().size()) {
-        same_set = false;
-      }
-      // if (std::set_difference(val.reveal(), val.reveal() + val.reveal().size(), deserialized_payload.reveal(), deserialized_payload.reveal() + deserialized_payload.reveal.size(), v1.begin()) - v1.begin() != 0) {
-      // for (std::string::iterator it=str.begin(); it!=str.end(); ++it) {
-
-      // }
-      // if (!same_set) {
-       if (val.reveal() == deserialized_payload.reveal()) {
+       if (val.reveal() != deserialized_payload.reveal()) {
         return serialize(val);
       } else {
-        return "ACK";
+        return kDeltaRequestIdentical;
       }
     }
   }

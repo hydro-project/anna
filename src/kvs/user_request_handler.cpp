@@ -13,6 +13,7 @@
 //  limitations under the License.
 
 #include "kvs/kvs_handlers.hpp"
+#include "metadata.hpp"
 
 void user_request_handler(
     unsigned &access_count, unsigned &seed, string &serialized, logger log,
@@ -81,9 +82,8 @@ void user_request_handler(
 
             auto res = process_get(key, serializers[stored_key_map[key].type_], delta, previous_payload);
             tp->set_lattice_type(stored_key_map[key].type_);
-            if (res.first == "ACK") {
+            if (res.first == kDeltaRequestIdentical) {
               tp->set_identical(true);
-              std::cout << "receive ACK in u_r_h" << std::endl;
  
             } else {
               tp->set_payload(res.first);

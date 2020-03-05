@@ -131,6 +131,48 @@ TEST_F(ServerHandlerTest, UserGetSetTest) {
   EXPECT_EQ(key_access_tracker[key].size(), 1);
 }
 
+TEST_F(ServerHandlerTest, UserGetDeltaSetTest) {
+  Key key = "key";
+  set<string> s;
+  s.emplace("value1");
+  s.emplace("value2");
+  s.emplace("value3");
+  serializers[LatticeType::SET]->put(key, serialize(SetLattice<string>(s)));
+  stored_key_map[key].type_ = LatticeType::SET;
+  string serialized_s = serialize(SetLattice<string>(s));
+
+  string get_request = get_key_request_delta(key, ip, serialized_s);
+
+  unsigned access_count = 0;
+  unsigned seed = 0;
+
+  EXPECT_EQ(local_changeset.size(), 0);
+
+  user_request_handler(access_count, seed, get_request, log_, global_hash_rings,
+                       local_hash_rings, pending_requests, key_access_tracker,
+                       stored_key_map, key_replication_map, local_changeset, wt,
+                       serializers, pushers);
+
+  vector<string> messages = get_zmq_messages();
+  EXPECT_EQ(messages.size(), 1);
+
+  KeyResponse response;
+  response.ParseFromString(messages[0]);
+
+  EXPECT_EQ(response.response_id(), kRequestId);
+  EXPECT_EQ(response.tuples().size(), 1);
+
+  KeyTuple rtp = response.tuples(0);
+
+  EXPECT_EQ(rtp.key(), key);
+  EXPECT_EQ(rtp.identical(), true);
+  EXPECT_EQ(rtp.error(), 0);
+
+  EXPECT_EQ(local_changeset.size(), 0);
+  EXPECT_EQ(access_count, 1);
+  EXPECT_EQ(key_access_tracker[key].size(), 1);
+}
+
 TEST_F(ServerHandlerTest, UserGetOrderedSetTest) {
   Key key = "key";
   ordered_set<string> s;
