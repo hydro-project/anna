@@ -4,6 +4,11 @@
 
 ## Prerequisites
 
+Anna has the Hydro common directory as a git submodule. After cloning anna, init and update the submodules to install the `commmon` subdirectory:
+```bash
+git submodule init; git submodule update
+```
+
 In order to build Anna, there are a variety of C++ and other dependencies that are required. Most can be installed with standard package managers like `brew` on macOS and `apt` on Debian. Prepackaged scripts to install dependencies on Fedora, Debian, and macOS can be found in `common/scripts/install-dependencies(-osx).sh`. If you would like to customize the installed packages, everything except for CMake and Protobuf can be installed via standard package managers. Any version of Protobuf 3 should be supported, and we require CMake to be at least version 3.6.
 
 ## Running the Build Script
