@@ -46,21 +46,25 @@ void address_handler(logger log, string &serialized, SocketCache &pushers,
     for (const Key &key : addr_request.keys()) {
       ServerThreadList threads = {};
 
-      for (const Tier &tier : kAllTiers) {
-        threads = kHashRingUtil->get_responsible_threads(
-            rt.replication_response_connect_address(), key, is_metadata(key),
-            global_hash_rings, local_hash_rings, key_replication_map, pushers,
-            {tier}, succeed, seed);
+      if (key.length() >
+          0) { // Only run this code is the key is a valid string.
+        // Otherwise, an empty response will be sent.
+        for (const Tier &tier : kAllTiers) {
+          threads = kHashRingUtil->get_responsible_threads(
+              rt.replication_response_connect_address(), key, is_metadata(key),
+              global_hash_rings, local_hash_rings, key_replication_map, pushers,
+              {tier}, succeed, seed);
 
-        if (threads.size() > 0) {
-          break;
-        }
+          if (threads.size() > 0) {
+            break;
+          }
 
-        if (!succeed) { // this means we don't have the replication factor for
-                        // the key
-          pending_requests[key].push_back(std::pair<Address, string>(
-              addr_request.response_address(), addr_request.request_id()));
-          return;
+          if (!succeed) { // this means we don't have the replication factor for
+                          // the key
+            pending_requests[key].push_back(std::pair<Address, string>(
+                addr_request.response_address(), addr_request.request_id()));
+            return;
+          }
         }
       }
 
