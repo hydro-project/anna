@@ -60,6 +60,8 @@ fi
 git remote add origin https://github.com/$REPO_ORG/anna
 git fetch -p origin
 git checkout -b brnch origin/$REPO_BRANCH
+git submodule sync
+git submodule update
 
 # Compile the latest version of the code on the branch we just check out.
 cd build && make -j2 && cd ..
