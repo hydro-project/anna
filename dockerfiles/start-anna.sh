@@ -58,7 +58,10 @@ if [[ -z "$REPO_BRANCH" ]]; then
 fi
 
 git remote add origin https://github.com/$REPO_ORG/anna
-git fetch -p origin
+while ! (git fetch -p origin)
+do
+  echo "git fetch failed, retrying"
+done
 git checkout -b brnch origin/$REPO_BRANCH
 
 # Compile the latest version of the code on the branch we just check out.
