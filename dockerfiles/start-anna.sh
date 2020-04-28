@@ -63,6 +63,8 @@ do
   echo "git fetch failed, retrying"
 done
 git checkout -b brnch origin/$REPO_BRANCH
+git submodule sync
+git submodule update
 
 # Compile the latest version of the code on the branch we just check out.
 cd build && make -j2 && cd ..
