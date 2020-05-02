@@ -87,6 +87,15 @@ void cache_ip_response_handler(string &serialized,
                                map<Address, set<Key>> &cache_ip_to_keys,
                                map<Key, set<Address>> &key_to_cache_ips);
 
+void management_node_response_handler(string &serialized,
+                                      set<Address> &extant_caches,
+                                      map<Address, set<Key>> &cache_ip_to_keys,
+                                      map<Key, set<Address>> &key_to_cache_ips,
+                                      GlobalRingMap &global_hash_rings,
+                                      LocalRingMap &local_hash_rings,
+                                      SocketCache &pushers, ServerThread &wt,
+                                      unsigned &rid);
+
 void send_gossip(AddressKeysetMap &addr_keyset_map, SocketCache &pushers,
                  SerializerMap &serializers,
                  map<Key, KeyProperty> &stored_key_map);
