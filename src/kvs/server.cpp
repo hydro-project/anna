@@ -100,14 +100,6 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
 
   map<Key, KeyReplication> key_replication_map;
 
-  // ZMQ socket for asking kops server for IP addrs of functional nodes.
-  zmq::socket_t func_nodes_requester(context, ZMQ_REQ);
-  if (management_ip != "NULL") {
-    func_nodes_requester.setsockopt(ZMQ_SNDTIMEO, 1000); // 1s
-    func_nodes_requester.setsockopt(ZMQ_RCVTIMEO, 1000); // 1s
-    func_nodes_requester.connect(get_func_nodes_req_address(management_ip));
-  }
-
   // request server addresses from the seed node
   zmq::socket_t addr_requester(context, ZMQ_REQ);
   addr_requester.connect(RoutingThread(seed_ip, 0).seed_connect_address());
@@ -274,9 +266,14 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
   zmq::socket_t replication_change_puller(context, ZMQ_PULL);
   replication_change_puller.bind(wt.replication_change_bind_address());
 
-  // responsible for listening for cache IP lookup response messages.
+  // responsible for listening for cached keys response messages.
   zmq::socket_t cache_ip_response_puller(context, ZMQ_PULL);
   cache_ip_response_puller.bind(wt.cache_ip_response_bind_address());
+
+  // responsible for listening for function node IP lookup response messages.
+  zmq::socket_t management_node_response_puller(context, ZMQ_PULL);
+  management_node_response_puller.bind(
+      wt.management_node_response_bind_address());
 
   //  Initialize poll set
   vector<zmq::pollitem_t> pollitems = {
@@ -287,7 +284,8 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
       {static_cast<void *>(gossip_puller), 0, ZMQ_POLLIN, 0},
       {static_cast<void *>(replication_response_puller), 0, ZMQ_POLLIN, 0},
       {static_cast<void *>(replication_change_puller), 0, ZMQ_POLLIN, 0},
-      {static_cast<void *>(cache_ip_response_puller), 0, ZMQ_POLLIN, 0}};
+      {static_cast<void *>(cache_ip_response_puller), 0, ZMQ_POLLIN, 0},
+      {static_cast<void *>(management_node_response_puller), 0, ZMQ_POLLIN, 0}};
 
   auto gossip_start = std::chrono::system_clock::now();
   auto gossip_end = std::chrono::system_clock::now();
@@ -295,7 +293,7 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
   auto report_end = std::chrono::system_clock::now();
 
   unsigned long long working_time = 0;
-  unsigned long long working_time_map[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+  unsigned long long working_time_map[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   unsigned epoch = 0;
 
   // enter event loop
@@ -425,6 +423,23 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
       working_time_map[7] += time_elapsed;
     }
 
+    // Receive management node response.
+    if (pollitems[8].revents & ZMQ_POLLIN) {
+      auto work_start = std::chrono::system_clock::now();
+
+      string serialized =
+          kZmqUtil->recv_string(&management_node_response_puller);
+      management_node_response_handler(
+          serialized, extant_caches, cache_ip_to_keys, key_to_cache_ips,
+          global_hash_rings, local_hash_rings, pushers, wt, rid);
+
+      auto time_elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
+                              std::chrono::system_clock::now() - work_start)
+                              .count();
+      working_time += time_elapsed;
+      working_time_map[8] += time_elapsed;
+    }
+
     // gossip updates to other threads
     gossip_end = std::chrono::system_clock::now();
     if (std::chrono::duration_cast<std::chrono::microseconds>(gossip_end -
@@ -473,7 +488,7 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
                               .count();
 
       working_time += time_elapsed;
-      working_time_map[8] += time_elapsed;
+      working_time_map[9] += time_elapsed;
     }
 
     // Collect and store internal statistics,
@@ -624,47 +639,9 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
       // Only do this if a management_ip is set -- i.e., we are not running in
       // local mode.
       if (management_ip != "NULL") {
-        kZmqUtil->send_string("", &func_nodes_requester);
-        // Get the response.
-        StringSet func_nodes;
-        func_nodes.ParseFromString(
-            kZmqUtil->recv_string(&func_nodes_requester));
-
-        // Update extant_caches with the response.
-        set<Address> deleted_caches = std::move(extant_caches);
-        extant_caches = set<Address>();
-        for (const auto &func_node : func_nodes.keys()) {
-          deleted_caches.erase(func_node);
-          extant_caches.insert(func_node);
-        }
-
-        // Process deleted caches
-        // (cache IPs that we were tracking but were not in the newest list of
-        // caches).
-        for (const auto &cache_ip : deleted_caches) {
-          cache_ip_to_keys.erase(cache_ip);
-          for (auto &key_and_caches : key_to_cache_ips) {
-            key_and_caches.second.erase(cache_ip);
-          }
-        }
-
-        // Get the cached keys by cache IP.
-        // First, prepare the requests for all the IPs we know about
-        // and put them in an address request map.
-        map<Address, KeyRequest> addr_request_map;
-        for (const auto &cacheip : extant_caches) {
-          Key key = get_user_metadata_key(cacheip, UserMetadataType::cache_ip);
-          prepare_metadata_get_request(
-              key, global_hash_rings[Tier::MEMORY],
-              local_hash_rings[Tier::MEMORY], addr_request_map,
-              wt.cache_ip_response_connect_address(), rid);
-        }
-
-        // Loop over the address request map and execute all the requests.
-        for (const auto &addr_request : addr_request_map) {
-          send_request<KeyRequest>(addr_request.second,
-                                   pushers[addr_request.first]);
-        }
+        kZmqUtil->send_string(
+            wt.management_node_response_connect_address(),
+            &pushers[get_func_nodes_req_address(management_ip)]);
       }
 
       // reset stats tracked in memory

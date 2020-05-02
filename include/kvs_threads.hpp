@@ -41,9 +41,13 @@ const unsigned kGossipPort = 6250;
 // the monitoring system.
 const unsigned kServerReplicationChangePort = 6300;
 
-// The port on which KVS servers listen for responses to a request for the list
-// of all existing caches.
+// The port on which KVS servers listen for responses to a request for listing
+// the keys cached at a function node.
 const unsigned kCacheIpResponsePort = 7050;
+
+// The port on which KVS servers listen for responses from management node to a
+// request for the list of all existing function nodes.
+const unsigned kManagementNodeResponsePort = 7100;
 
 // The port on which routing servers listen for cluster membership requests.
 const unsigned kSeedPort = 6350;
@@ -171,6 +175,14 @@ public:
 
   Address cache_ip_response_bind_address() const {
     return kBindBase + std::to_string(tid_ + kCacheIpResponsePort);
+  }
+
+  Address management_node_response_connect_address() const {
+    return private_base_ + std::to_string(tid_ + kManagementNodeResponsePort);
+  }
+
+  Address management_node_response_bind_address() const {
+    return kBindBase + std::to_string(tid_ + kManagementNodeResponsePort);
   }
 
   Address gossip_connect_address() const {
