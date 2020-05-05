@@ -70,7 +70,7 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
   } else {
     log->error("E: socket error number {} ({})", errno, zmq_strerror(errno));
   }
-  
+
   SocketCache pushers(&context, ZMQ_PUSH);
 
   // initialize hash ring maps

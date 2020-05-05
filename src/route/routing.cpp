@@ -48,7 +48,7 @@ void run(unsigned thread_id, Address ip, vector<Address> monitoring_ips) {
   } else {
     log->error("E: socket error number {} ({})", errno, zmq_strerror(errno));
   }
-  
+
   SocketCache pushers(&context, ZMQ_PUSH);
   map<Key, KeyReplication> key_replication_map;
 
