@@ -161,34 +161,47 @@ class AnnaTcpClient(BaseAnnaClient):
 
         return kv_pairs
 
-    def put(self, key, value):
-        worker_address = self._get_worker_address(key)
+    def put(self, keys, values):
+        request_ids = []
 
-        if not worker_address:
-            return False
+        if type(keys) != list:
+            keys = [keys]
+        if type(values) != list:
+            values = [values]
 
-        send_sock = self.pusher_cache.get(worker_address)
+        for key, value in zip(keys, values):
+            worker_address = self._get_worker_address(key)
 
-        # We pass in a list because the data request preparation can prepare
-        # multiple tuples
-        req, tup = self._prepare_data_request([key])
-        req.type = PUT
+            if not worker_address:
+                return False
 
-        # PUT only supports one key operations, we only ever have to look at
-        # the first KeyTuple returned.
-        tup = tup[0]
-        tup.payload, tup.lattice_type = self._serialize(value)
+            send_sock = self.pusher_cache.get(worker_address)
 
-        send_request(req, send_sock)
-        response = recv_response([req.request_id], self.response_puller,
-                                 KeyResponse)[0]
+            # We pass in a list because the data request preparation can prepare
+            # multiple tuples
+            req, tup = self._prepare_data_request([key])
+            req.type = PUT
 
-        tup = response.tuples[0]
+            # PUT only supports one key operations, we only ever have to look at
+            # the first KeyTuple returned.
+            tup = tup[0]
+            tup.payload, tup.lattice_type = self._serialize(value)
 
-        if tup.invalidate:
-            self._invalidate_cache(tup.key)
+            send_request(req, send_sock)
 
-        return tup.error == NO_ERROR
+        responses = recv_response(request_ids, self.response_puller,
+                                 KeyResponse)
+
+        results = {}
+        for response in responses:
+            tup = response.tuples[0]
+
+            if tup.invalidate:
+                self._invalidate_cache(tup.key)
+
+            results[tup.key] = (tup.error == NO_ERROR)
+
+        return results
 
     def put_all(self, key, value):
         worker_addresses = self._get_worker_address(key, False)
@@ -228,7 +241,7 @@ class AnnaTcpClient(BaseAnnaClient):
     # that key are not cached locally, a query is synchronously issued to the
     # routing tier, and the address cache is updated.
     def _get_worker_address(self, key, pick=True):
-        if key not in self.address_cache:
+        if key not in self.address_cache or len(self.address_cache[key]) == 0:
             port = random.choice(self.elb_ports)
             addresses = self._query_routing(key, port)
             self.address_cache[key] = addresses
