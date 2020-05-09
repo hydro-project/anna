@@ -105,7 +105,7 @@ void handle_request(KvsClientInterface *client, string input) {
       std::cout << "Invalid response: ID did not match request ID!"
                 << std::endl;
     }
-    if (response.tuples()[0].error() == AnnaError::NO_ERROR) {
+    if (response.error() == AnnaError::NO_ERROR) {
       std::cout << "Success!" << std::endl;
     } else {
       std::cout << "Failure!" << std::endl;
@@ -141,7 +141,7 @@ void handle_request(KvsClientInterface *client, string input) {
       std::cout << "Invalid response: ID did not match request ID!"
                 << std::endl;
     }
-    if (response.tuples()[0].error() == AnnaError::NO_ERROR) {
+    if (response.error() == AnnaError::NO_ERROR) {
       std::cout << "Success!" << std::endl;
     } else {
       std::cout << "Failure!" << std::endl;
@@ -166,7 +166,7 @@ void handle_request(KvsClientInterface *client, string input) {
       std::cout << "Invalid response: ID did not match request ID!"
                 << std::endl;
     }
-    if (response.tuples()[0].error() == AnnaError::NO_ERROR) {
+    if (response.error() == AnnaError::NO_ERROR) {
       std::cout << "Success!" << std::endl;
     } else {
       std::cout << "Failure!" << std::endl;
