@@ -181,6 +181,7 @@ class AnnaTcpClient(BaseAnnaClient):
             # multiple tuples
             req, tup = self._prepare_data_request([key])
             req.type = PUT
+            request_ids.append(req.request_id)
 
             # PUT only supports one key operations, we only ever have to look at
             # the first KeyTuple returned.
