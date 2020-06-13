@@ -37,6 +37,10 @@ void handle_request(KvsClientInterface *client, string input) {
   vector<string> v;
   split(input, ' ', v);
 
+  if (v.size() == 0) {
+    std::exit(EXIT_SUCCESS);
+  }
+
   if (v[0] == "GET") {
     client->get_async(v[1]);
 
