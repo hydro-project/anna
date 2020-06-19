@@ -14,5 +14,5 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-bash tests/simple-test-simple.sh
+bash tests/simple/test-simple.sh
 cd build && make test
