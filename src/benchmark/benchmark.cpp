@@ -185,7 +185,7 @@ void run(const unsigned &thread_id,
             receive(&client);
             count += 1;
           } else if (type == "P") {
-            unsigned ts = generate_timestamp(thread_id);
+            auto ts = generate_timestamp(thread_id);
             LWWPairLattice<string> val(
                 TimestampValuePair<string>(ts, string(length, 'a')));
 
@@ -194,7 +194,7 @@ void run(const unsigned &thread_id,
             count += 1;
           } else if (type == "M") {
             auto req_start = std::chrono::system_clock::now();
-            unsigned ts = generate_timestamp(thread_id);
+            auto ts = generate_timestamp(thread_id);
             LWWPairLattice<string> val(
                 TimestampValuePair<string>(ts, string(length, 'a')));
 
@@ -306,7 +306,7 @@ void run(const unsigned &thread_id,
             log->info("Creating key {}.", i);
           }
 
-          unsigned ts = generate_timestamp(thread_id);
+          auto ts = generate_timestamp(thread_id);
           LWWPairLattice<string> val(
               TimestampValuePair<string>(ts, string(length, 'a')));
 
