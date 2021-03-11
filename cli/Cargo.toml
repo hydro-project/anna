@@ -25,5 +25,7 @@ clap = "~2"
 log = "0.4.6"
 simplog = "~1.2"
 error-chain = "0.12.2"
+sysinfo = "0.16.4"
+nix = "0.20.0"
 
 [dev-dependencies]
