@@ -103,6 +103,10 @@ fn pids_from_name(name: &str) -> Vec<i32> {
     pids
 }
 
+
+// TODO delete logs option and delete them?
+// Tests of the cli
+
 /*
     The 'stop' command - will kill all the running ana related background processes locally
 */
