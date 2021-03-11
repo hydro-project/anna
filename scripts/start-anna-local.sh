@@ -16,8 +16,6 @@
 
 if [ -z "$1" ] && [ -z "$2" ]; then
   echo "Usage: ./$0 build start-user"
-  echo ""
-  echo "You must run this from the project root directory."
   exit 1
 fi
 
@@ -31,8 +29,7 @@ cp conf/anna-local.yml conf/anna-config.yml
 MPID=$!
 ./build/target/kvs/anna-route &
 RPID=$!
-export SERVER_TYPE="memory"
-./build/target/kvs/anna-kvs &
+SERVER_TYPE="memory" ./build/target/kvs/anna-kvs &
 SPID=$!
 
 echo $MPID > pids
