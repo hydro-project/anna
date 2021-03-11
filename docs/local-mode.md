@@ -12,5 +12,14 @@ thread per process in local mode.
 * If `{start-cli}` is specified, the interactive Anna CLI will be started in this context after the server is started.
 
 ## Stopping Anna
-`scripts/stop-anna-local.sh {remove-logs}` can be used to stop the Anna server. 
-* If `remove-logs` is specified, all logs will be deleted. Otherwise they will be left in place -- this is primarily used for debugging purposes.
+You can stop the running background processes by using the `anna` CLI `stop` command
+
+If you have the `anna` crate installed, just use
+```bash
+> anna stop
+```
+
+If you have not installed it, then you can build and run the development version using
+```bash
+> cargo run -- stop
+```
