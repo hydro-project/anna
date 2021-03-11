@@ -41,6 +41,8 @@ install:
 
 script:
   - ./scripts/travis/travis-build.sh
+  - cargo clippy
+  - cargo test
 
 after_success:
   - ./scripts/travis/upload-codecov.sh
