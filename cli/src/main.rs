@@ -74,17 +74,25 @@ fn run() -> Result<String> {
     debug!("'{}' CLI version {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
     debug!("'anna' library version {}", info::version());
 
-    if let Some(arg_matches) = matches.subcommand_matches("help") {
-        return help(app_clone, &arg_matches);
+    match matches.subcommand() {
+        ("help", arg_matches) => return help(app_clone, arg_matches),
+        ("stop", arg_matches) => return stop(app_clone, arg_matches),
+        (_, _) => Ok("No command executed".into())
     }
+}
 
-    Ok("No command executed".into())
+/*
+    The 'stop' command
+*/
+fn stop(_app: App, _arg_matches: Option<&ArgMatches>) -> Result<String> {
+    println!("STOP!");
+    Ok("".into())
 }
 
 /*
     The 'help' command
 */
-fn help(mut app: App, _arg_matches: &ArgMatches) -> Result<String> {
+fn help(mut app: App, _arg_matches: Option<&ArgMatches>) -> Result<String> {
     app.print_long_help()?;
     Ok("".into())
 }
@@ -101,6 +109,6 @@ fn get_app() -> App<'static, 'static> {
             .takes_value(true)
             .value_name("VERBOSITY_LEVEL")
             .help("Set verbosity level for output (trace, debug, info, warn, error (default))"))
-        .subcommand(SubCommand::with_name("test")
-            .about("display help text"))
+        .subcommand(SubCommand::with_name("stop")
+            .about("Stop running instances of anna (monitor, route and kvs)"))
 }
