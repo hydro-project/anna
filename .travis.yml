@@ -39,8 +39,13 @@ cache:
   directories:
     - $PROTOBUF_DIR
 
+branches:
+  only:
+    - "master"
+
 install:
   - ./common/scripts/travis/travis-install.sh
+  - rustup --quiet component add clippy
 
 script:
   - ./scripts/travis/travis-build.sh
