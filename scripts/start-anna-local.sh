@@ -29,7 +29,7 @@ cp conf/anna-local.yml conf/anna-config.yml
 MPID=$!
 ./build/target/kvs/anna-route &
 RPID=$!
-SERVER_TYPE="memory" ./build/target/kvs/anna-kvs &
+./build/target/kvs/anna-kvs &
 SPID=$!
 
 echo $MPID > pids
