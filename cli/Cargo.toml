@@ -1,0 +1,31 @@
+[package]
+name = "anna"
+version = "0.1.0"
+authors = ["Andrew Mackenzie <andrew@mackenzie-serres.net>"]
+description = "A command line tool for the `anna` key-value store"
+license = "Apache 2.0"
+documentation = "https://github.com/andrewdavidmackenzie/anna/cli/README.md"
+repository = "https://github.com/andrewdavidmackenzie/anna/"
+readme = "README.md"
+edition = "2018"
+
+[[bin]]
+name = "anna"
+path = "src/main.rs"
+
+[lib]
+name = "annalib"
+path = "src/lib/lib.rs"
+
+[features]
+default = []
+
+[dependencies]
+clap = "~2"
+log = "0.4.6"
+simplog = "~1.2"
+error-chain = "0.12.2"
+sysinfo = "0.16.4"
+nix = "0.20.0"
+
+[dev-dependencies]

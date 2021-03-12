@@ -12,8 +12,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-language: cpp
+language: rust
 sudo: required
+
+rust:
+  - stable
 
 os: 
   - linux
@@ -36,11 +39,18 @@ cache:
   directories:
     - $PROTOBUF_DIR
 
+branches:
+  only:
+    - "master"
+
 install:
   - ./common/scripts/travis/travis-install.sh
+  - rustup --quiet component add clippy
 
 script:
   - ./scripts/travis/travis-build.sh
+  - cargo clippy
+  - cargo test
 
 after_success:
   - ./scripts/travis/upload-codecov.sh

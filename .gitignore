@@ -17,6 +17,8 @@ build
 vendor/gtest/build
 *log*.txt
 *tmp*
+pids
+/conf/anna-config.yml
 
 # ignore compiled byte code
 target
