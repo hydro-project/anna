@@ -13,16 +13,8 @@ use std::process::exit;
 use clap::{App, Arg, SubCommand, ArgMatches};
 use log::{debug, warn};
 use simplog::simplog::SimpleLogger;
-use sysinfo::{ProcessExt, System, SystemExt};
-use nix::sys::signal::{kill, Signal};
 use annalib::info;
-use nix::unistd::Pid;
-
-// Pending them being defined elsewhere in a build script or similar
-const ANNA_MONITOR_PROCESS_NAME: &str = "anna-monitor";
-const ANNA_ROUTE_PROCESS_NAME: &str = "anna-route";
-const ANNA_KVS_PROCESS_NAME: &str = "anna-kvs";
-const KILL_LIST: [&str;3] = [ ANNA_MONITOR_PROCESS_NAME, ANNA_ROUTE_PROCESS_NAME, ANNA_KVS_PROCESS_NAME];
+use annalib;
 
 // We'll put our errors in an `errors` module, and other modules in this crate will
 // `use crate::errors::*;` to get access to everything `error_chain!` creates.
@@ -41,6 +33,7 @@ error_chain! {
     foreign_links {
         Io(std::io::Error);
         Clap(clap::Error);
+        Anna(annalib::errors::Error);
     }
 }
 
@@ -85,47 +78,13 @@ fn run() -> Result<String> {
 
     match matches.subcommand() {
         ("help", arg_matches) => return help(app_clone, arg_matches),
-        ("stop", arg_matches) => return stop(app_clone, arg_matches),
+        ("stop", _) => Ok(format!("{} anna processes were terminated", annalib::stop()
+            .map_err(|e| e.to_string())?)),
         (_, _) => Ok("No command executed".into())
     }
 }
 
-/*
-    Gather a list of pids that are running for a process using the process name
- */
-fn pids_from_name(name: &str) -> Vec<i32> {
-    let s = System::new_all();
-    let mut pids = vec!();
-    for process in s.get_process_by_name(name) {
-        pids.push(process.pid());
-    }
-
-    pids
-}
-
-
-// TODO delete logs option and delete them?
 // Tests of the cli
-
-/*
-    The 'stop' command - will kill all the running ana related background processes locally
-*/
-fn stop(_app: App, _arg_matches: Option<&ArgMatches>) -> Result<String> {
-    let mut pids: Vec<i32> = vec!();
-    for process_name in KILL_LIST.iter() {
-        let mut pids_of_process = pids_from_name(process_name);
-        pids.append(&mut pids_of_process);
-    }
-
-    let mut kill_count = 0;
-    for pid in pids {
-        if kill(Pid::from_raw(pid), Some(Signal::SIGTERM)).is_ok() {
-            kill_count += 1;
-        }
-    }
-
-    Ok(format!("{} anna processes were terminated", kill_count))
-}
 
 /*
     The 'help' command
