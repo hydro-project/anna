@@ -179,17 +179,17 @@ void compute_summary_stats(
   unsigned m_count = 0;
   unsigned e_count = 0;
 
-  for (const auto &memory_storage : memory_storage) {
+  for (const auto &memory_storage_elem : memory_storage) {
     unsigned total_thread_consumption = 0;
 
-    for (const auto &thread_storage : memory_storage.second) {
+    for (const auto &thread_storage : memory_storage_elem.second) {
       ss.total_memory_consumption += thread_storage.second;
       total_thread_consumption += thread_storage.second;
     }
 
     double percentage = (double)total_thread_consumption /
                         (double)kTierMetadata[Tier::MEMORY].node_capacity_;
-    log->info("Memory node {} storage consumption is {}.", memory_storage.first,
+    log->info("Memory node {} storage consumption is {}.", memory_storage_elem.first,
               percentage);
 
     if (percentage > ss.max_memory_consumption_percentage) {
@@ -199,17 +199,17 @@ void compute_summary_stats(
     m_count += 1;
   }
 
-  for (const auto &ebs_storage : ebs_storage) {
+  for (const auto &ebs_storage_elem : ebs_storage) {
     unsigned total_thread_consumption = 0;
 
-    for (const auto &thread_storage : ebs_storage.second) {
+    for (const auto &thread_storage : ebs_storage_elem.second) {
       ss.total_ebs_consumption += thread_storage.second;
       total_thread_consumption += thread_storage.second;
     }
 
     double percentage = (double)total_thread_consumption /
                         (double)kTierMetadata[Tier::DISK].node_capacity_;
-    log->info("EBS node {} storage consumption is {}.", ebs_storage.first,
+    log->info("EBS node {} storage consumption is {}.", ebs_storage_elem.first,
               percentage);
 
     if (percentage > ss.max_ebs_consumption_percentage) {
